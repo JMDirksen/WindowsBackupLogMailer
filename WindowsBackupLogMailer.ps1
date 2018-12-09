@@ -15,6 +15,7 @@ $logs = Get-WinEvent Microsoft-Windows-Backup |
 Where-Object { $_.TimeCreated -gt (Get-Date).AddDays(-1) } |
 Select-Object TimeCreated, Message |
 Sort-Object TimeCreated |
+Format-Table -Wrap |
 Out-String
 
 # Setup E-mail body
