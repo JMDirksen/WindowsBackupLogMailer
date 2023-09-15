@@ -3,11 +3,11 @@
 
 # Get Backupset
 $backupSet = " Files:`n"
-(Get-WBPolicy).FilesSpecsToBackup | ForEach-Object {
+(Get-WBPolicy).FilesSpecsToBackup | Sort-Object -Property {$_.FilePath + $_.FileName} | ForEach-Object {
     $backupSet += "  - " + $_.FilePath + $_.FileName + "`n"
 }
 $backupSet += " VMs:`n"
-(Get-WBPolicy).ComponentsToBackup | ForEach-Object {
+(Get-WBPolicy).ComponentsToBackup | Sort-Object -Property VMName | ForEach-Object {
     $backupSet += "  - " + $_.VMName + "`n"
 }
 
