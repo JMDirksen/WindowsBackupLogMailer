@@ -1,13 +1,14 @@
-﻿. "$PSScriptRoot\EmailCredentials.ps1"
+﻿# Generate the EmailCredentials file by running the following command:
+# Get-Credential | Export-Clixml "EmailCredentials.xml"
 
 # Get Backupset
-$backupSet = "Files:`n"
+$backupSet = " Files:`n"
 (Get-WBPolicy).FilesSpecsToBackup | ForEach-Object {
-    $backupSet += $_.FilePath + $_.FileName + "`n"
+    $backupSet += "  - " + $_.FilePath + $_.FileName + "`n"
 }
-$backupSet += "VMs:`n"
+$backupSet += " VMs:`n"
 (Get-WBPolicy).ComponentsToBackup | ForEach-Object {
-    $backupSet += $_.VMName + "`n"
+    $backupSet += "  - " + $_.VMName + "`n"
 }
 
 # Get Logs
@@ -19,16 +20,19 @@ Format-Table -Wrap |
 Out-String
 
 # Setup E-mail body
-$body = "BackupSet:`n" + $backupSet + $logs
+$body = "<pre>BackupSet:`n" + $backupSet + $logs + "</pre>"
 
 # Send E-mail
-$EmailFrom = $Email
-$EmailTo = $Email
-$msg = New-Object System.Net.Mail.MailMessage $EmailFrom, $EmailTo
-$msg.Subject = "WindowsBackupLog"
-$msg.Body = $body
-$SMTPServer = "smtp.gmail.com"
-$SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587)
-$SMTPClient.EnableSsl = $true
-$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($Email, $Password);
-$SMTPClient.Send($msg)
+$credentials = Import-Clixml "EmailCredentials.xml"
+$Email = @{
+    "From"       = $credentials.UserName
+    "To"         = $credentials.UserName
+    "Subject"    = "[$env:COMPUTERNAME] WindowsBackupLogMailer"
+    "Body"       = $body
+    "BodyAsHtml" = $true
+    "SmtpServer" = "smtp.gmail.com"
+    "Port"       = 587
+    "UseSsl"     = $true
+    "Credential" = $credentials
+}
+Send-MailMessage @Email
